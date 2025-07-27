@@ -1,10 +1,15 @@
+from collections import deque
+
 def solution(arr):
     answer = []
-    for i in range(len(arr)-1):
-        if i == 0:
-            answer.append(arr[i])
-        if arr[i] == arr[i+1]:
-            continue
-        else:
-            answer.append(arr[i+1])
+    q = deque(arr)
+    while q:
+        x = q.popleft()
+        while q:
+            if x == q[0]:
+                q.popleft()
+            else:
+                break
+        answer.append(x)
+        
     return answer
