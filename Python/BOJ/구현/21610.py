@@ -1,72 +1,59 @@
-from collections import deque
 import sys
-
 input = sys.stdin.readline
+
+# 8방향 ←, ↖, ↑, ↗, →, ↘, ↓, ↙
+dx = [0, -1, -1, -1, 0, 1, 1, 1]
+dy = [-1, -1, 0, 1, 1, 1, 0, -1]
+
 N, M = map(int, input().split())
-graph = [list(map(int, input().split())) for _ in range(N)]
+board = [list(map(int, input().split())) for _ in range(N)]
 
-# 8방향 정의
-dx = [0, 0, -1, -1, -1, 0, 1, 1, 1]
-dy = [0, -1, -1, 0, 1, 1, 1, 0, -1]
+# 초기 구름
+clouds = [(N-1, 0), (N-1, 1), (N-2, 0), (N-2, 1)]
 
-cloud_q = deque()  # 비구름 위치
+def move_and_rain(d, s):
+    new_clouds = []
+    for x, y in clouds:
+        nx = (x+dx[d]*s) % N
+        ny = (y+dy[d]*s) % N
+        new_clouds.append((nx, ny))
+    # 비 내리기
+    for x, y in new_clouds:
+        board[x][y] += 1
+    return new_clouds
 
-# 초기 비구름 위치 저장
-for a, b in [(N, 1), (N, 2), (N - 1, 1), (N - 1, 2)]:
-    cloud_q.append((a - 1, b - 1))
+def water_copy_bug(current_clouds):
+    # 대각선만 체크
+    for x, y in current_clouds:
+        cnt = 0
+        for i in range(1, 8, 2):
+            nx, ny = x+dx[i], y+dy[i]
+            if 0<=nx<N and 0<=ny<N and board[nx][ny] >= 1:
+                cnt += 1
+        board[x][y] += cnt
 
-# 대각선 방향 중 물 있는 칸의 개수 세기
-def water_exist(x, y):
-    cnt = 0
-    for i in range(2, 9, 2):
-        nx, ny = x + dx[i], y + dy[i]
-        if 0 <= nx < N and 0 <= ny < N and graph[x + dx[i]][y + dy[i]] > 0:
-            cnt += 1
-    return cnt
+def make_new_clouds(current_clouds):
+    # 이번 턴에 구름이 있던 칸을 표시
+    was_cloud = [[False] * N for _ in range(N)]
+    for x, y in current_clouds:
+        was_cloud[x][y] = True
 
-def move(d, s):
-    cloud_visited = [[0] * N for _ in range(N)] # 사라진 구름 위치인지 체크하는 용도
-    more_water_q = deque() # 대각선 방향에서 물을 더 받아올 수 있는지 확인해야 하는 위치
-    while cloud_q:
-        x, y = cloud_q.popleft()
-        nx, ny = x + (dx[d] * s), y + (dy[d] * s)
-
-        # 범위 넘어갈 경우 계산
-        if nx < 0:
-            while True:
-                nx += N
-                if nx >= 0:
-                    break
-        elif nx >= N:
-            nx = nx % N
-        if ny < 0:
-            while True:
-                ny += N
-                if ny >= 0:
-                    break
-        elif ny >= N:
-            ny = ny % N
-
-        graph[nx][ny] += 1
-        more_water_q.append((nx, ny))
-
-    while more_water_q:
-        x, y = more_water_q.popleft()
-        graph[x][y] += water_exist(x, y)
-        cloud_visited[x][y] = 1
-
+    new_clouds = []
     for i in range(N):
         for j in range(N):
-            if cloud_visited[i][j] == 0 and graph[i][j] >= 2:
-                cloud_q.append((i, j))
-                graph[i][j] -= 2
+            if board[i][j] >= 2 and not was_cloud[i][j]:
+                new_clouds.append((i, j))
+                board[i][j] -= 2
+    return new_clouds
 
 for _ in range(M):
     d, s = map(int, input().split())
-    move(d, s)
+    d -= 1
+    # 1 ~ 2단계 : 이동 + 비
+    clouds = move_and_rain(d, s%N)
+    # 3단계 : 물복사버그
+    water_copy_bug(clouds)
+    # 4단계 : 새 구름 생성
+    clouds = make_new_clouds(clouds)
 
-result = 0
-for i in range(N):
-    for j in range(N):
-        result += graph[i][j]
-print(result)
+print(sum(map(sum, board)))
