@@ -1,20 +1,20 @@
-h, w, x, y = map(int, input().split())
-B = [list(map(int, input().split())) for _ in range(h+x)]
+import sys
+input = sys.stdin.readline
 
-A = [[0] * w for _ in range(h)]
+H, W, X, Y = map(int, input().split())
+B = [list(map(int, input().split())) for _ in range(H+X)]
+A = [[0] * W for _ in range(H)]
 
-for i in range(h+x):
-    for j in range(w+y):
-        if B[i][j] == 0:
-            continue
-        if x <= i < h and y <= j < w:
-            A[i][j] = B[i][j] - A[i-x][j-y]
-        elif 0 <= i < h and 0 <= j < w:
+for i in range(H+X):
+    for j in range(W+Y):
+        if X <= i < H and Y <= j < W:
+            A[i][j] = B[i][j] - A[i-X][j-Y]
+        elif 0 <= i < H and 0 <= j < W:
             A[i][j] = B[i][j]
-        elif x <= i < h+x and y <= j < w+y:
-            A[i-x][j-y] = B[i][j]
+        elif X <= i < H+X and Y <= j < W+Y:
+            A[i-X][j-Y] = B[i][j]
 
-for i in range(h):
-    for j in range(w):
-        print(A[i][j], end=' ')
-    print("")
+for i in range(H):
+    for j in range(W):
+        print(A[i][j], end=" ")
+    print()
