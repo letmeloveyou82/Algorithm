@@ -1,33 +1,34 @@
-from collections import deque
 import sys
+from collections import deque
 
 input = sys.stdin.readline
 
-def bfs():
-  q = deque()
-  q.append((home_x, home_y))
-  while q:
-    x, y = q.popleft()
-    if abs(x - festival_x) + abs(y - festival_y) <= 1000:
-      print('happy')
-      return
-    for i in range(n):
-      if visited[i] == 0:
-        new_x, new_y = graph[i]
-        if abs(x - new_x) + abs(y - new_y) <= 1000:
-          visited[i] = 1
-          q.append((new_x, new_y))
-  print('sad')
-  return
+def can_go(points, n):
+    # points: 집 + 편의점 n개 + 페스티벌 위치
+    
+    q = deque([0])
+    visited = [False] * (n+2)
+    visited[0] = True
+    
+    while q:
+        idx = q.popleft()
+        if idx == n+1: # festival 인덱스
+            return True
 
+        x, y = points[idx]
+        for next in range(n+2):
+            if not visited[next]:
+                nx, ny = points[next]
+                if abs(x-nx)+abs(y-ny) <= 1000:
+                    visited[next] = True
+                    q.append(next)
+
+    return False
 
 for _ in range(int(input())):
-  n = int(input())
-  graph = []
-  home_x, home_y = map(int, input().split())
-  for _ in range(n):
-    x, y = map(int, input().split())
-    graph.append((x, y))
-  festival_x, festival_y = map(int, input().split())
-  visited = [0] * (n + 1)
-  bfs()
+    n = int(input())
+    points = [tuple(map(int, input().split()))]
+    for _ in range(n+1):
+        points.append(tuple(map(int, input().split())))
+
+    print("happy" if can_go(points, n) else "sad")
